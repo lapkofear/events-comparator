@@ -19,22 +19,22 @@ public class Application {
 
     public static void main(String... filenames) throws IOException {
         long start = System.currentTimeMillis();
-
-        Iterator<String> iterator1 = new BufferedReader(new FileReader(new File(filenames[0]))).lines().iterator();
-        Iterator<String> iterator2 = new BufferedReader(new FileReader(new File(filenames[1]))).lines().iterator();
-
         LOG.info("Start comparing files " + Arrays.toString(filenames));
+        try (FileReader reader1 = new FileReader(new File(filenames[0])); FileReader reader2 = new FileReader(new File(filenames[1]))) {
 
-        Iterator<String> resultIterator = new OuterJoin().perform(iterator1, iterator2);
+            Iterator<String> resultIterator =
+                    new OuterJoin().perform(new BufferedReader(reader1).lines().iterator(), new BufferedReader(reader2).lines().iterator());
 
-        File newFile = new File("result_" + System.currentTimeMillis());
-        newFile.createNewFile();
-        FileWriter fileWriter = new FileWriter(newFile);
-        while (resultIterator.hasNext()) {
-            fileWriter.write(resultIterator.next() + "\n");
+            File newFile = new File("result_" + System.currentTimeMillis());
+            newFile.createNewFile();
+            try (FileWriter fileWriter = new FileWriter(newFile)) {
+                while (resultIterator.hasNext()) {
+                    fileWriter.write(resultIterator.next() + "\n");
+                }
+            }
+
+            LOG.info("Done in {} ms. Result is written into file: {}", System.currentTimeMillis() - start, newFile.getAbsolutePath());
         }
-
-        LOG.info("Done in {} ms. Result is written into file: {}", System.currentTimeMillis() - start, newFile.getAbsolutePath());
     }
 
 }
